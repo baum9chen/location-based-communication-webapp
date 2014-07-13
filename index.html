@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>node.js chat</title>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+
+var socket
+var username = "";
+window.onload = function() {
+	
+	username = prompt("ユーザ名を入力してください");
+	$("#username").val(username);
+
+	//socket = io.connect("http://127.0.0.1:3000");
+	socket = io.connect();
+	
+	socket.on("connect",function(){});
+	socket.on("disconnect", function(){});
+	
+	socket.on("S_to_C_message",function(data){
+		$("#msg_list").prepend("<div class='msg'>[" + utime2datetime(data.date) + "] " + data.username + " &gt; " + data.message + "</div>");
+	});
+	
+	socket.on("S_to_C_log",function(data){
+		$("#msg_list").empty();
+		for (var i=0,ilen=data.length; i<ilen; ++i) {
+			$("#msg_list").append("<div class='msg'>[" + utime2datetime(data[i].date) + "] " + data[i].username + " &gt; " + data[i].message + "</div>");
+		}
+	});
+
+	$("#btn_sendMsg").click(function(){
+		var user = $("#username").val();
+		var msg = $("#message").val(); //取得
+		$("#message").val(""); //空白にする
+		socket.emit("C_to_S_message", {"message":msg, "username":user}); //サーバへ送信
+	});
+}
+
+function utime2datetime(utime) {
+	var d = new Date( utime * 1000 );
+	var year  = d.getFullYear();
+	var month = d.getMonth() + 1;
+	var day  = d.getDate();
+	var hour = ( d.getHours()   < 10 ) ? '0' + d.getHours()   : d.getHours();
+	var min  = ( d.getMinutes() < 10 ) ? '0' + d.getMinutes() : d.getMinutes();
+	var sec   = ( d.getSeconds() < 10 ) ? '0' + d.getSeconds() : d.getSeconds();
+	
+	return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
+	
+}
+
+window.onunload = function() {
+	var user = $("#username").val();
+	socket.emit("C_to_S_message", {"message":"good-bye", "username":user}); //サーバへ送信
+	//socket.emit("C_to_S_broadcast", {"message": "good-bye", "username":user})
+}
+  </script>
+  <style>
+    *{
+      font-size:30px;
+      margin:0;
+      padding:0;
+    }
+  </style>
+</head>
+<body>
+  <div>ユーザ名：<input id="username" type="text" class="text" style="width:300px; padding:10px;" readonly /></div>
+  <div id="msg_list" style="height:300px; overflow:auto;"></div>
+  <div>
+    <input id="message" type="text" class="text" style="width:75%; padding:10px"/>
+    <input id="btn_sendMsg" type="button" class="button" style="width:20%; height:30px; padding:10px" value="みんなに送信" />
+  </div>
+</body>
+</html>
