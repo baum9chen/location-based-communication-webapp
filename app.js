@@ -8,10 +8,10 @@ var schema = new mongoose.Schema({
 	"username"   : String
 	, "message"  : String
 	, "date"     : Number
-//	, "location" : {
-//		"lat"  : Number
-//		,"lon" : Number
-//	}
+	, "location" : {
+		"lat"  : Number
+		,"lon" : Number
+	}
 });
 var Location = db.model("Location",schema);
 
@@ -35,6 +35,8 @@ io.sockets.on("connection", function(socket) {
 		location.username = data.username;
 		location.message  = data.message;
 		location.date     = parseInt(new Date()/1000);
+		location.location.lat = data.lat;
+		location.location.lon = data.lon;
 		location.save(function(err){
 			
 			// 保存完了後、クライアントに送信
