@@ -49,8 +49,16 @@ io.sockets.on("connection", function(socket) {
 		location.username = data.username;
 		location.message  = data.message;
 		location.date     = parseInt(new Date()/1000);
-		location.location.lat = data.lat;
-		location.location.lon = data.lon;
+		location.location.lat = null;
+		location.location.lon = null;
+		if (typeof data.location !== "undefined") {
+			if (typeof data.location.lat !== "undefined" &&
+				typeof data.location.lon !== "undefined") 
+			{
+				location.location.lat = data.location.lat;
+				location.location.lon = data.location.lon;
+			}
+		}
 		location.save(function(err){
 			
 			// 保存完了後、クライアントに送信

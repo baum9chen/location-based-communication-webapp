@@ -21,6 +21,14 @@ window.onload = function() {
 	map.addControl(new Y.CenterMarkControl());
 	map.drawMap(new Y.LatLng(35.66572, 139.73100), 17, Y.LayerSetId.NORMAL);
 	
+	navigator.geolocation.getCurrentPosition(function(p){
+		map.panTo(new Y.LatLng(p.coords.latitude,p.coords.longitude));
+	});
+	setInterval(function() {
+		navigator.geolocation.getCurrentPosition(function(p){
+			map.panTo(new Y.LatLng(p.coords.latitude,p.coords.longitude));
+		});
+	},10000)	
 	//socket = io.connect("http://127.0.0.1:3000");
 	socket = io.connect();
 	
@@ -28,8 +36,6 @@ window.onload = function() {
 	socket.on("disconnect", function(){});
 	
 	socket.on("S_to_C_message",function(data){
-		console.log(data);
-		
 		$("#msg_list").prepend("<div class='msg'>[" + utime2datetime(data.date) + "] " + data.username + " &gt; " + data.message + "</div>");
 		
 		if (typeof data.location !== "undefined" && (data.location.lat && data.location.lon)) {
