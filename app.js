@@ -1,11 +1,13 @@
 var http = require("http");
 var socketio = require("socket.io");
 var fs = require("fs");
+var url = require('url');
 var mongoose = require("mongoose");
 
 var db = mongoose.connect("mongodb://localhost/location");
 var schema = new mongoose.Schema({
-	"username"   : String
+	"group"      : String
+	,"username"   : String
 	, "message"  : String
 	, "date"     : Number
 	, "location" : {
@@ -15,7 +17,17 @@ var schema = new mongoose.Schema({
 });
 var Location = db.model("Location",schema);
 
+var groupName = "";
+
 var server = http.createServer(function(req, res) {
+	
+	var url_parts = url.parse(req.url);
+	
+	var path = url_parts['pathname'].substring(1);
+	var query = url_parts['query'] !== null ? url_parts['query'] : "";
+	if (path !== "favicon.ico") {
+		groupName = path;
+	}
 	res.writeHead(200, {"Content-Type":"text/html"});
 	var output = fs.readFileSync("./index.html","utf-8");
 	res.end(output);
@@ -23,8 +35,9 @@ var server = http.createServer(function(req, res) {
 
 var io = socketio.listen(server);
 io.sockets.on("connection", function(socket) {
-
-	Location.find({},{},{"sort":{"date":"desc"}},function(err,data) {
+	
+	var query = groupName ? {"group":groupName} : {};
+	Location.find(query,{},{"sort":{"date":"desc"}},function(err,data) {
 		io.sockets.emit("S_to_C_log", data);
 	});
 	
@@ -32,6 +45,7 @@ io.sockets.on("connection", function(socket) {
 	socket.on("C_to_S_message", function(data) {
 		// 送信されたメッセージを保存
 		var location = new Location();
+		location.group    = groupName;
 		location.username = data.username;
 		location.message  = data.message;
 		location.date     = parseInt(new Date()/1000);
