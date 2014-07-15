@@ -1,7 +1,7 @@
-var http = require("http");
+var http     = require("http");
 var socketio = require("socket.io");
-var fs = require("fs");
-var url = require('url');
+var fs       = require("fs");
+var url      = require('url');
 var mongoose = require("mongoose");
 
 var db = mongoose.connect("mongodb://localhost/location");
@@ -36,7 +36,10 @@ var server = http.createServer(function(req, res) {
 var io = socketio.listen(server);
 io.sockets.on("connection", function(socket) {
 	
-	var query = groupName ? {"group":groupName} : {};
+	var query = {};
+	if (groupName) {
+		query["group"] = groupName;
+	}
 	Location.find(query,{},{"sort":{"date":"desc"}},function(err,data) {
 		io.sockets.emit("S_to_C_log", data);
 	});
